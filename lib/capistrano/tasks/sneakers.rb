@@ -94,15 +94,20 @@ namespace :sneakers do
   def start_sneakers(pid_file, idx = 0)
     if fetch(:sneakers_run_config) == true
       # Use sneakers configuration prebuilt in
-      raise "[ set :workers, ['worker1', 'workerN'] ] not configured properly, please configure the workers you wish to use" if fetch(:sneakers_workers).nil? or fetch(:sneakers_workers) == false or !fetch(:sneakers_workers).kind_of? Array
+      
+      options = { rails_env: fetch(:sneakers_env) }
 
-      workers = fetch(:sneakers_workers).compact.join(',')
+      workers_config = fetch(:sneakers_workers)
+      if workers_config.kind_of? Array
+        workers = workers_config.compact.join(',')
+        options.merge!(workers: workers) unless workers.empty?
+      end
       
       #run "cmd", env: { 'WORKERS' => workers } #export this to environmental variable
       info "Starting the sneakers processes"
       #workers.each do |worker|
 
-      with rails_env: fetch(:sneakers_env), workers: workers do 
+      with options do 
         rake 'sneakers:run'
       end
       #execute :bundle, :exec, :sneakers, args.compact.join(' ')
